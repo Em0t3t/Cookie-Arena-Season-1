@@ -24,8 +24,11 @@ Tiếp theo ta grep flag là sẽ có flag
 Flag: Flag{Micro$oft_Heck3r_Man}
 
 ###  From The Above 
-File wav trong bài là sóng vô tuyến được gửi từ vệ tinh và có thể transform thành image với tool WxToImage. Link: https://www.wraase.de/wxtoimg/
-Bài này mình dùng Windows để tải phần mềm này về rồi sau đó import file wav vào và chuyển qua tab Image thì ta đã có flag
+File wav trong bài là sóng vô tuyến được gửi từ vệ tinh dùng để truyền dữ liệu thời tiết qua SSTV và có thể transform thành image với tool WxToImage. Link: https://www.wraase.de/wxtoimg/
+Bài này mình dùng Windows để tải phần mềm này về rồi sau đó import file wav vào thì lập tức ta có flag
+
+![image](https://user-images.githubusercontent.com/50044415/139907436-6ced9e5f-b2a6-463e-8231-b5416995fe7e.png)
+
 
 ### Streamer
 Bài cho ta 1 file pcapng. Mở file với wireshark. Để ý răng có khá nhiều luồng traffic HTTP.
