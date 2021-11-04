@@ -41,8 +41,11 @@ Trong các file được export có 1 file zip có mật khẩu. Ta đọc một
 Dùng mật khẩu để giải nén ta có flag.txt. 
 Flag: Flag{TCP_streamin_go_skrrrrrrrt}
 
-### Interceptor
-Bài cho mình một file gif, lên mạng tìm các trang split gif online thì ta có 9 ảnh, mỗi ảnh chứa 1 mảnh QR code. Dùng photoshop cắt dán lại thì ta có: 
+### Intercep
+Bài cho mình một file gif, lên mạng tìm các trang split gif online thì ta có 9 ảnh, mỗi ảnh chứa 1 mảnh QR code. Dùng photoshop cắt dán lại thì ta có mã QR, scan và lấy flag
+![image](https://user-images.githubusercontent.com/50044415/140254834-1f8c2e42-5829-4395-873f-109f12580d24.png)
+
+
 
 ### Volatility
 Bài này intended way chắc là dùng volatility mò từ từ, nhưng mà theo thói quen thì mình grep flag từ đầu luôn ai ngờ ra thật.
@@ -76,6 +79,85 @@ Vào decode.fr decode Ceasar cipher thì ta được Flag{El_Clasico_Cipher}
 Vào CyberChef decode Base64 sau đó chuyển từ Hex về ascii thì ta có flag `Flag{___Base64xHex___}`
 
 ### Bruh AES
+### Cry more
+Bài này mình search google thì thấy có một bài crypto tương tự từng được dùng trong các CTF trước và có cả writeup nên mình code theo và lấy flag từ đó. Link wu: https://chrsow.me/story/2018/05/21/rctf-2018-crypto-writeup.html
+
+
+Code: 
+```py
+from pwn import *
+import hashpumpy
+import datetime
+import os
+import random
+import socketserver
+import sys
+from base64 import b64decode, b64encode
+from hashlib import sha512
+
+r = remote('chal1.crypto.letspentest.org', 7000)
+
+u = r.recvline()
+u = r.recvline()
+u = r.recvline()
+u = r.recvline()
+u = r.recvline()
+u = r.recvuntil('Your choice: ')
+ans = 2
+r.sendline(str(ans).encode('utf-8'))
+u = r.recv()
+print(u)
+ans = 6
+r.sendline(str(ans).encode('utf-8'))
+u = r.recvline()
+print(u)
+ed_base = u[12:-1]
+print(ed_base)
+payment = b64decode(ed_base)
+print(payment)
+sp = payment.rfind(b'&sign=')
+print("sp: ",sp)
+sign = payment[sp+6:]
+print("sign",sign)
+#sign = sign[:sign.rfind(b'\n')]
+print("sign edit",sign)
+payment = payment[payment.rfind(b'product'):payment.rfind(b'&sign')]
+print("payment",payment)
+
+for keylen in range(8,32):
+    # keylen = 8
+    log.info('trying keylen='+str(keylen))
+
+    n = hashpumpy.hashpump(sign, payment, '&price=1', keylen)
+    print(n)
+    order = n[1] + b"&sign="+ n[0].encode()
+    print(order)
+    u = r.recv()
+    print(u)
+    ans = 3
+    r.sendline(str(ans).encode('utf-8'))
+    u = r.recv()
+    print(u)
+    anss = b64encode(order)
+    r.sendline(anss)
+    u = r.recv()
+    print(u)
+
+# p.sendline("3")
+# p.recvuntil("Your order:")
+# p.sendline(order)
+# p.recv(1000)
+# ret = p.recv(1000)
+# if ("Invalid" not in ret):
+# print(ret)
+# print(p.recvuntil("Money: "))
+# quit()
+# u = r.recvline()
+# ans = 2
+# r.sendline(str(ans).encode('utf-8'))
+# u = r.recvline()
+# print(u)
+```
 
 ## Network
 ### Post Office Man
@@ -197,6 +279,153 @@ Bài này mới đầu mình tưởng SQLI nên tốn kha khá time, sau đó fu
 
 Flag: Flag{61cb4a784e83b6109999af6f036b88bf}
 
+## Misc
+### Discord
 
+## Programming
+
+### SUM()
+Trong hàm solver chỉ cần split các số ra rồi cộng lại
+
+```py
+if len(line) > 0:
+            if line[0].isdigit():
+                sum = 0
+                for i in line.split(' '):
+                    if i != '':
+                        sum += int(i)
+                return sum
+ ```
+
+### Pro102
+Template của đề đã đầy đủ nên mình chỉ implement code giải trong hàm solver, parse thằng các tham số đề cho rồi giải phương trình bậc 2 như thường
+
+```py
+s = 'a22W362Z273a40Z22X56357W5268a411'
+from string import ascii_lowercase, ascii_uppercase
+alphabet1 = ascii_lowercase + ascii_uppercase
+alphabet2 = '0123456789'
+for i in s:
+    if i in alphabet1:
+        index = alphabet1.find(i)
+        index -= 48
+        c = alphabet1[index % 52]
+    else:
+        index = alphabet2.find(i)
+        index -= 48
+        c = alphabet2[index % 10]
+    print(c,end="")
+```
+
+### Roberval
+Chỉ cần dùng log3(n) thì sẽ có thể lấy được số lần cân chính xác, cụ thể chứng minh các bạn có thể xem trên mạng.
+Bài này template của đề cho xử lý hơi khó chịu, nên mình dùng code riêng để giải. 
+
+```py
+from pwn import *
+import math
+r = remote('programming.letspentest.org',8333)
+u = r.recvline()
+while(1):
+    u = r.recvline()
+    print(u)
+    ans=[]
+    for _ in u:
+        if(48<=_ and _<=57):
+            ans.append(_-48)
+    res = 0
+    for _ in ans:
+        res = res*10+_ 
+    aa = int(math.log(res,3))
+    u = r.recvline()
+    r.sendline(str(aa).encode())
+    u = r.recvline()
+    print(u)
+r.interactive()
+```
+
+## Web Basic
+### Hân Hoan 
+Login thử với admin:admin thì server báo là "You are not CookieHanHoan". Vào check cookie thì thấy có cookie là Role=Guest, đổi lại thành Role=CookieHanHoan thì có flag
+
+###  Header 401 
+Vào web thì ta thấy dòng: Hello GET Request. Nice to meet you <3
+
+Inspect source thì thấy: Basic Authentication Credential: gaconlonton/cookiehanhoan
+
+Vậy khả năng là GET request không trả về flag, mình sẽ đổi qua thành POST request đồng thời với Basic cred là base64 của gaconlonton:cookiehanhoan. Cụ thể hơn về Basic Auth các bạn có thể tham khảo ở https://developer.mozilla.org/en-US/docs/Web/HTTP/Authentication
+
+Dùng command của linux cho tiện: `curl http://chal3.web.letspentest.org/ -X POST -H "Authorization: Basic $(echo -n 'gaconlonton:cookiehanhoan' | base64 -w 0)"`
+
+###  JS B**p B**p 
+Vào source của web thì thấy nó sử dụng 4 script trong static là 1.js, 2.js, 3.js và 4.js. Mở các file này ra đọc thì thấy chúng được viết bởi JSFuck. Mình sẽ dùng web sau để decode JSFuck : https://enkhee-osiris.github.io/Decoder-JSFuck/
+
+Source code sau khi recover:
+
+```js
+function verifyUsername(username) {     
+  if (username != "cookiehanhoan") {   
+    return false
+  }   
+  return true
+}
+
+function reverseString(str) {
+  if (str === "")    {
+    return ""
+  }  
+  else {
+    return reverseString(str.substr(1)) + str.charAt(0)}
+}
+
+function verifyPassword(password) {  
+  if (reverseString(password) != "dr0Wss@p3rucreSr3pus") {
+    return false 
+  }     
+  return true  
+}
+
+function verifyRole(role) {
+  if (role.charCodeAt(0) != 64) {
+    return false;
+  }       
+  if ((role.charCodeAt(1) + role.charCodeAt(2) != 209) && (role.charCodeAt(2) - role.charCodeAt(1) != 9)) {   
+    return false       
+  }
+  if ((role.charCodeAt(3).toString() + role.charCodeAt(4).toString() != "10578") && (role.charCodeAt(3) - role.charCodeAt(4) != 27)) {      
+    return false
+  }
+  return true
+}
+```
+
+Vậy là code JS sẽ check username = cookiehanhoan, password = dr0Wss@p3rucreSr3pus và role = @dmiN (reverse mã ascii)
+
+### Impossible
+Inpect code HTML thì thấy đoạn code JS sau:
+
+```js
+
+function checkPass()
+{
+	var password = document.getElementById('password').value;
+	if (btoa(password.replace("cookiehanhoan", "")) == "Y29va2llaGFuaG9hbg==") {
+		window.setTimeout(function() {
+			window.location.assign('check.php?password=' + password);
+		}, 500);
+	}
+}
+```
+
+Code JS sẽ thay chuỗi cookiehanhoan thành chuỗi rỗng rồi gửi đến /check.php?password=<phần còn lại>. Thử submit lên /check.php?password=cookiehanhoan thì thấy không đúng, vậy ta thử /check.php?password=cookiecookiehanhoanhanhoan (sau khi replace 1 lần thì vẫn còn lại cookiehanhoan) là có flag
+
+###  Infinite Loop 
+Bài này mình cũng không hiểu lắm dụng ý của người ra đề, cứ bật Burp Suite lên bỏ request vào Repeater rồi cứ Follow Redirection liên tục thì ta có flag
+
+###  I am not a robot 
+Đề bài gợi ý kiểm tra /robots.txt, vào thì thấy có 1 endpoint mới là /fl@g1337_d240c789f29416e11a3084a7b50fade5.txt. Thử truy cập thì ta có flag
+
+### Sause
+Bài này inspect source là thấy flag
 
 
